@@ -1,0 +1,41 @@
+name: Dev Docker Check
+
+on:
+  pull_request:
+    branches:
+      - stage
+
+jobs:
+  docker-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build Next
+        run: npm run build
+
+      - name: Docker Compose Build
+        run: docker compose build
+
+      - name: Docker Compose Up
+        run: docker compose up -d
+
+      - name: Check containers
+        run: docker compose ps
+
+      - name: Show logs if failed
+        if: failure()
+        run: docker compose logs
