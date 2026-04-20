@@ -36,7 +36,8 @@ function toInputDate(d: Date) {
   return `${y}-${m}-${day}`;
 }
 
-const MAX_ATTACHMENT_BYTES = 3 * 1024 * 1024;
+/** Fichier brut max ; le corps Server Action est plus gros (data URL base64). */
+const MAX_ATTACHMENT_BYTES = 16 * 1024 * 1024;
 
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -389,6 +390,13 @@ function downloadAsset(url: string | undefined, filename: string) {
   })();
 }
 
+/** URL pour l’aperçu intégré (navigateurs PDF : fragment #page=1). */
+function pdfPreviewEmbedSrc(url: string): string {
+  const u = url.trim();
+  if (!u || u.includes("#")) return u;
+  return `${u}#page=1`;
+}
+
 // ─── DetailDrawer ─────────────────────────────────────────────────────────────
 function DetailDrawer({
   state,
@@ -692,6 +700,70 @@ function DetailDrawer({
                               ⬇ Télécharger l&apos;image
                             </button>
                           ) : null}
+                        </div>
+                      ) : post.file.kind === "pdf" && post.file.url ? (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                          <div
+                            style={{
+                              width: "100%",
+                              maxHeight: "min(50vh, 420px)",
+                              borderRadius: 12,
+                              border: "1px solid #2a2a3a",
+                              background: "#0a0a12",
+                              overflow: "hidden",
+                            }}
+                          >
+                            <iframe
+                              title={`Aperçu PDF — ${post.file.name}`}
+                              src={pdfPreviewEmbedSrc(post.file.url)}
+                              style={{
+                                width: "100%",
+                                height: "min(50vh, 420px)",
+                                border: "none",
+                                display: "block",
+                              }}
+                            />
+                          </div>
+                          <div
+                            style={{
+                              display: "flex",
+                              flexWrap: "wrap",
+                              alignItems: "center",
+                              gap: 10,
+                            }}
+                          >
+                            <button
+                              type="button"
+                              onClick={() =>
+                                downloadAsset(post.file?.url, post.file?.name ?? "")
+                              }
+                              style={{
+                                border: "1px solid #f0409044",
+                                borderRadius: 10,
+                                padding: "10px 16px",
+                                background: "#1a1a2a",
+                                color: "#f472b6",
+                                fontSize: 12,
+                                fontWeight: 700,
+                                cursor: "pointer",
+                              }}
+                            >
+                              ⬇ Télécharger le PDF
+                            </button>
+                            <a
+                              href={post.file.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={{
+                                fontSize: 12,
+                                fontWeight: 700,
+                                color: "#f0a0c8",
+                                textDecoration: "underline",
+                              }}
+                            >
+                              Ouvrir dans un nouvel onglet
+                            </a>
+                          </div>
                         </div>
                       ) : post.file.url ? (
                         <a

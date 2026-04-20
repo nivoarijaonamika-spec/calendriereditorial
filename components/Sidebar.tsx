@@ -67,7 +67,7 @@ export default function Sidebar() {
             <Card.Header className="border-b border-white/10 px-6 pb-6 pt-8 text-right">
                 <div className="flex flex-col items-end gap-0.5">
                     <span className="text-3xl font-bold tracking-tight text-[#f04090]">
-                        Nocturne
+                       Viviworks.AI
                     </span>
                     <p className="text-[10px] font-medium tracking-[1.5px] text-[#6060a0]">
                         EDITORIAL SAAS

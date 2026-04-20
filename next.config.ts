@@ -4,7 +4,8 @@ const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
       /** Pièces jointes encodées en data URL (calendrier éditorial) */
-      bodySizeLimit: "16mb",
+      /** ≥ taille fichier max en data URL (base64 ~ +33 %). */
+      bodySizeLimit: "24mb",
     },
   },
 };
