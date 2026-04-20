@@ -227,7 +227,7 @@ function AddDrawer({
       {/* No trigger child — we open programmatically via state.open() */}
       <Drawer.Backdrop>
         <Drawer.Content placement="right">
-          <Drawer.Dialog className="bg-[#10101a] max-w-md w-full">
+          <Drawer.Dialog className="h-full max-h-[100dvh] w-full max-w-[min(100vw,28rem)] bg-[#10101a] sm:max-h-[min(100dvh,90vh)]">
             <Drawer.CloseTrigger
               className="absolute top-4 right-4 text-[#6060a0] hover:text-[#f0f0ff] transition-colors"
               onClick={reset}
@@ -490,7 +490,7 @@ function DetailDrawer({
     <Drawer state={state}>
       <Drawer.Backdrop>
         <Drawer.Content placement="right">
-          <Drawer.Dialog className="bg-[#10101a] max-w-md w-full">
+          <Drawer.Dialog className="h-full max-h-[100dvh] w-full max-w-[min(100vw,28rem)] bg-[#10101a] sm:max-h-[min(100dvh,90vh)]">
             <Drawer.CloseTrigger className="absolute top-4 right-4 text-[#6060a0] hover:text-[#f0f0ff] transition-colors" />
 
             <Drawer.Header className="border-b border-[#1e1e30] pb-4">
@@ -914,7 +914,7 @@ function YearView({ year, posts, onMonthClick }: {
   year: number; posts: Post[]; onMonthClick: (m: number) => void;
 }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4 lg:gap-[14px]">
       {MOIS_FR.map((name, mi) => {
         const mPosts = posts.filter(p => p.date.getFullYear() === year && p.date.getMonth() === mi);
         const isCur  = mi === today.getMonth() && year === today.getFullYear();
@@ -1017,45 +1017,58 @@ export function EditorialCalendarClient({ initialPosts }: { initialPosts: Serial
   const btnBase: React.CSSProperties = { border: "none", cursor: "pointer", transition: "all 0.15s" };
 
   return (
-    <div style={{
-      minHeight: "100vh", background: "#0d0d14", color: "#f0f0ff",
-      fontFamily: "'DM Sans', 'Syne', sans-serif", padding: "28px 24px",
-    }}>
+    <div
+      className="min-h-[calc(100dvh-3.5rem)] text-[#f0f0ff] md:min-h-0"
+      style={{
+        background: "#0d0d14",
+        fontFamily: "'DM Sans', 'Syne', sans-serif",
+        padding: "12px 0 24px",
+      }}
+    >
       {/* ── HEADER ── */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
-        <div>
-          <h1 style={{ fontSize: 42, fontWeight: 900, letterSpacing: "-1.5px", margin: 0, lineHeight: 1 }}>
+      <div className="mb-5 flex flex-col gap-4 sm:mb-6 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0">
+          <h1
+            className="m-0 text-[clamp(1.65rem,5.5vw,2.625rem)] font-black leading-none tracking-tight lg:tracking-[-0.04em]"
+          >
             {view === "Année" ? year : MOIS_FR[month]}
           </h1>
-          <p style={{ fontSize: 10, letterSpacing: "0.2em", color: "#5050a0", marginTop: 6, fontWeight: 600 }}>
+          <p className="mt-1.5 text-[10px] font-semibold tracking-[0.2em] text-[#5050a0] sm:mt-2">
             CALENDRIER ÉDITORIAL · {year}
           </p>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="flex w-full flex-wrap items-center gap-2 sm:gap-3 lg:w-auto lg:flex-nowrap lg:justify-end">
           {/* View toggle */}
-          <div style={{ background: "#1a1a2a", borderRadius: 999, padding: 4, display: "flex", gap: 2 }}>
-            {(["Mois","Semaine","Année"] as ViewMode[]).map(v => (
-              <button key={v} onClick={() => { setView(v); setWeekOff(0); }}
+          <div className="flex min-w-0 flex-1 flex-wrap gap-0.5 rounded-full bg-[#1a1a2a] p-1 sm:flex-none sm:flex-nowrap">
+            {(["Mois", "Semaine", "Année"] as ViewMode[]).map((v) => (
+              <button
+                key={v}
+                onClick={() => {
+                  setView(v);
+                  setWeekOff(0);
+                }}
+                className="min-w-0 flex-1 rounded-full px-2.5 py-1.5 text-[11px] font-bold sm:flex-none sm:px-3.5 sm:text-xs"
                 style={{
-                  ...btnBase, borderRadius: 999, padding: "5px 14px", fontSize: 12, fontWeight: 700,
+                  ...btnBase,
                   background: view === v ? "#f04090" : "transparent",
-                  color:      view === v ? "#fff"    : "#6060a0",
-                }}>
+                  color: view === v ? "#fff" : "#6060a0",
+                }}
+              >
                 {v}
               </button>
             ))}
           </div>
 
           {/* Navigation */}
-          <div style={{ display: "flex", gap: 4 }}>
-            {(["◀","▶"] as const).map((arrow, i) => (
-              <button key={arrow} onClick={i === 0 ? goPrev : goNext}
-                style={{
-                  ...btnBase, background: "#1a1a2a", border: "1px solid #2a2a40",
-                  borderRadius: 8, width: 32, height: 32, color: "#6060a0", fontSize: 11,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                }}>
+          <div className="flex shrink-0 gap-1">
+            {(["◀", "▶"] as const).map((arrow, i) => (
+              <button
+                key={arrow}
+                onClick={i === 0 ? goPrev : goNext}
+                className="flex size-9 items-center justify-center rounded-lg border border-[#2a2a40] bg-[#1a1a2a] text-[11px] text-[#6060a0]"
+                style={btnBase}
+              >
                 {arrow}
               </button>
             ))}
@@ -1064,11 +1077,9 @@ export function EditorialCalendarClient({ initialPosts }: { initialPosts: Serial
           {/* Add */}
           <button
             onClick={() => openAdd(today)}
-            style={{
-              ...btnBase, background: "#f04090", color: "#fff",
-              borderRadius: 999, padding: "8px 18px", fontSize: 13, fontWeight: 700,
-              boxShadow: "0 0 20px #f0409044",
-            }}>
+            className="shrink-0 rounded-full px-4 py-2 text-xs font-bold text-white shadow-[0_0_20px_#f0409044] sm:px-[18px] sm:text-[13px]"
+            style={{ ...btnBase, background: "#f04090" }}
+          >
             + Ajouter
           </button>
         </div>
@@ -1083,32 +1094,49 @@ export function EditorialCalendarClient({ initialPosts }: { initialPosts: Serial
 
       {/* ── VUE MOIS ── */}
       {view === "Mois" && (
-        <div style={{ background: "#10101a", borderRadius: 16, overflow: "hidden", border: "1px solid #1e1e30" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", borderBottom: "1px solid #1e1e30" }}>
-            {JOURS_C.map(d => (
-              <div key={d} style={{ padding: "11px 0", textAlign: "center", fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", color: "#40407a" }}>
-                {d}
-              </div>
-            ))}
-          </div>
-          {Array.from({ length: 6 }, (_, row) => (
-            <div key={row} style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", borderBottom: row < 5 ? "1px solid #1a1a28" : "none" }}>
-              {monthCells.slice(row * 7, row * 7 + 7).map(({ date, current }, col) => {
-                const isTod    = sameDay(date, today);
-                const dayPosts = posts.filter(p => sameDay(p.date, date));
-                return (
+        <div className="overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
+          <div className="min-w-[540px] sm:min-w-0">
+            <div style={{ background: "#10101a", borderRadius: 16, overflow: "hidden", border: "1px solid #1e1e30" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", borderBottom: "1px solid #1e1e30" }}>
+                {JOURS_C.map((d) => (
                   <div
-                    key={col}
-                    onClick={() => openAdd(date)}
-                    style={{
-                      minHeight: 100, padding: "8px 8px 10px",
-                      borderRight: col < 6 ? "1px solid #1a1a28" : "none",
-                      background: isTod ? "#141420" : "transparent",
-                      cursor: "pointer", transition: "background 0.1s",
-                    }}
-                    onMouseEnter={e => { if (!isTod) e.currentTarget.style.background = "#0f0f1a"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = isTod ? "#141420" : "transparent"; }}
+                    key={d}
+                    className="px-0.5 py-2.5 text-center text-[9px] font-bold tracking-[0.12em] text-[#40407a] sm:text-[10px]"
                   >
+                    {d}
+                  </div>
+                ))}
+              </div>
+              {Array.from({ length: 6 }, (_, row) => (
+                <div
+                  key={row}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(7, 1fr)",
+                    borderBottom: row < 5 ? "1px solid #1a1a28" : "none",
+                  }}
+                >
+                  {monthCells.slice(row * 7, row * 7 + 7).map(({ date, current }, col) => {
+                    const isTod = sameDay(date, today);
+                    const dayPosts = posts.filter((p) => sameDay(p.date, date));
+                    return (
+                      <div
+                        key={col}
+                        className="min-h-[72px] px-1 py-1.5 sm:min-h-[100px] sm:px-2 sm:pb-2.5 sm:pt-2"
+                        onClick={() => openAdd(date)}
+                        style={{
+                          borderRight: col < 6 ? "1px solid #1a1a28" : "none",
+                          background: isTod ? "#141420" : "transparent",
+                          cursor: "pointer",
+                          transition: "background 0.1s",
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isTod) e.currentTarget.style.background = "#0f0f1a";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = isTod ? "#141420" : "transparent";
+                        }}
+                      >
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
                       <span style={{
                         fontSize: 12, fontWeight: isTod ? 800 : 500,
@@ -1124,43 +1152,67 @@ export function EditorialCalendarClient({ initialPosts }: { initialPosts: Serial
                       ))}
                     </div>
                   </div>
-                );
-              })}
+                    );
+                  })}
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       )}
 
       {/* ── VUE SEMAINE ── */}
       {view === "Semaine" && (
-        <div style={{ background: "#10101a", borderRadius: 16, overflow: "hidden", border: "1px solid #1e1e30" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", borderBottom: "1px solid #1e1e30" }}>
-            {weekCells.map(({ date }, i) => {
-              const isTod = sameDay(date, today);
-              return (
-                <div key={i} style={{ padding: "14px 8px", textAlign: "center", borderRight: i < 6 ? "1px solid #1e1e30" : "none" }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", color: "#40407a", marginBottom: 4 }}>
-                    {JOURS_L[i].toUpperCase().slice(0, 3)}
-                  </div>
-                  <div style={{ fontSize: 24, fontWeight: 900, color: isTod ? "#f04090" : date.getMonth() === month ? "#d0d0f0" : "#303050" }}>
-                    {date.getDate()}
-                  </div>
-                  {isTod && <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#f04090", margin: "4px auto 0" }} />}
-                </div>
-              );
-            })}
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", minHeight: 320 }}>
-            {weekCells.map(({ date }, i) => {
-              const dayPosts = posts.filter(p => sameDay(p.date, date));
-              return (
-                <div
-                  key={i}
-                  onClick={() => openAdd(date)}
-                  style={{ padding: "12px 8px", minHeight: 200, borderRight: i < 6 ? "1px solid #1a1a28" : "none", cursor: "pointer" }}
-                  onMouseEnter={e => (e.currentTarget.style.background = "#0f0f1a")}
-                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-                >
+        <div className="overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
+          <div className="min-w-[540px] sm:min-w-0">
+            <div style={{ background: "#10101a", borderRadius: 16, overflow: "hidden", border: "1px solid #1e1e30" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", borderBottom: "1px solid #1e1e30" }}>
+                {weekCells.map(({ date }, i) => {
+                  const isTod = sameDay(date, today);
+                  return (
+                    <div
+                      key={i}
+                      className="px-1 py-2.5 text-center sm:px-2 sm:py-3.5"
+                      style={{ borderRight: i < 6 ? "1px solid #1e1e30" : "none" }}
+                    >
+                      <div className="mb-1 text-[9px] font-bold tracking-[0.12em] text-[#40407a] sm:text-[10px]">
+                        {JOURS_L[i].toUpperCase().slice(0, 3)}
+                      </div>
+                      <div
+                        className="text-lg font-black sm:text-2xl"
+                        style={{
+                          color: isTod ? "#f04090" : date.getMonth() === month ? "#d0d0f0" : "#303050",
+                        }}
+                      >
+                        {date.getDate()}
+                      </div>
+                      {isTod && (
+                        <div
+                          style={{
+                            width: 5,
+                            height: 5,
+                            borderRadius: "50%",
+                            background: "#f04090",
+                            margin: "4px auto 0",
+                          }}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="grid min-h-[240px] grid-cols-7 sm:min-h-[320px]">
+                {weekCells.map(({ date }, i) => {
+                  const dayPosts = posts.filter((p) => sameDay(p.date, date));
+                  return (
+                    <div
+                      key={i}
+                      className="min-h-[160px] px-1 py-2 sm:min-h-[200px] sm:px-2 sm:py-3"
+                      onClick={() => openAdd(date)}
+                      style={{ borderRight: i < 6 ? "1px solid #1a1a28" : "none", cursor: "pointer" }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "#0f0f1a")}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                    >
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {dayPosts.map(p => (
                       <PostPill key={p.id} post={p} onClick={() => openDetail(p)} />
@@ -1170,8 +1222,10 @@ export function EditorialCalendarClient({ initialPosts }: { initialPosts: Serial
                     )}
                   </div>
                 </div>
-              );
-            })}
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       )}
