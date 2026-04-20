@@ -92,7 +92,9 @@ export async function getDashboardStats(): Promise<DashboardStats | null> {
   const oldestDay = startOfLocalDay(addDays(now, -6));
   const endExclusive = addDays(startOfLocalDay(now), 1);
 
-  const postsInWindow = await prisma.editorialPost.findMany({
+  type PostScheduledSlice = { scheduledAt: Date };
+
+  const postsInWindow: PostScheduledSlice[] = await prisma.editorialPost.findMany({
     where: {
       userId,
       scheduledAt: {
