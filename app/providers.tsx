@@ -8,15 +8,19 @@ export function Providers({
 }: {
   children: React.ReactNode;
 }) {
-  return <HeroUIProvider>{children}
-  <Toaster
+  return (
+    <HeroUIProvider>
+      {children}
+      <Toaster
         position="top-right"
         toastOptions={{
           style: {
-            background: "#111",
-            color: "#fff",
-            border: "1px solid rgba(255,255,255,0.1)",
+            background: "#10101a",
+            color: "#f0f0ff",
+            border: "1px solid rgba(240, 64, 144, 0.25)",
           },
         }}
-      /></HeroUIProvider>;
+      />
+    </HeroUIProvider>
+  );
 }

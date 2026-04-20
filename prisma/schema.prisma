@@ -23,8 +23,42 @@ model User {
   emailVerified Boolean   @default(false)
   sessions      Session[]
   accounts      Account[]
+  editorialPosts EditorialPost[]
 
   @@map("user")
+}
+
+enum EditorialPostStatus {
+  PUBLIE
+  BROUILLON
+  PLANIFIE
+}
+
+enum EditorialPostType {
+  ARTICLE
+  PODCAST
+  VIDEO
+  IMAGE
+}
+
+model EditorialPost {
+  id           String              @id @default(cuid())
+  userId       String
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title        String
+  description  String?
+  status       EditorialPostStatus
+  type         EditorialPostType
+  scheduledAt  DateTime
+  platforms    String[]            @default([])
+  fileUrl      String? @db.Text
+  fileName     String?
+  fileKind     String?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@index([userId, scheduledAt])
+  @@map("editorial_post")
 }
 
 model Session {

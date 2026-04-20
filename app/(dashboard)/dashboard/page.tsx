@@ -1,11 +1,11 @@
-// app/(dashboard)/dashboard/page.tsx
-export default function DashboardPage() {
-  return (
-    <div>
-      <h1 className="text-3xl font-bold text-white">Tableau de bord</h1>
-      <p className="text-zinc-400 mt-4">
-        Bienvenue sur ton tableau de bord Nocturne.
-      </p>
-    </div>
-  );
+import { redirect } from "next/navigation";
+import { getDashboardStats } from "@/lib/data/dashboard-stats";
+import DashboardClient from "./dashboard-client";
+
+export default async function DashboardPage() {
+  const stats = await getDashboardStats();
+  if (!stats) {
+    redirect("/");
+  }
+  return <DashboardClient stats={stats} />;
 }

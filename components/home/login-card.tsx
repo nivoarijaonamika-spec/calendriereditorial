@@ -43,8 +43,8 @@ export function LoginCard() {
   }
 
   return (
-    <Card className="w-full max-w-md border border-white/10 bg-zinc-950/80 p-8 backdrop-blur-xl shadow-2xl">
-      <div className="space-y-2">
+    <Card className="w-full max-w-md border border-white/10 bg-zinc-950/80 p-8 shadow-2xl backdrop-blur-xl">
+      <div className="w-full space-y-2">
         <h2 className="text-3xl font-semibold text-white">
           Bon retour
         </h2>
@@ -53,47 +53,55 @@ export function LoginCard() {
         </p>
       </div>
 
-      <div className="mt-8 space-y-6">
-        <div className="space-y-2">
-          <label className="text-xs uppercase tracking-widest text-zinc-400">
+      <div className="mt-8 flex w-full flex-col gap-6">
+        <div className="flex w-full min-w-0 flex-col gap-2">
+          <label
+            htmlFor="login-email"
+            className="block w-full text-xs uppercase tracking-widest text-zinc-400"
+          >
             Adresse email
           </label>
           <Input
+            id="login-email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="admin@calendrier.local"
-            className="text-white"
+            className="w-full min-w-0 text-white"
           />
         </div>
 
-        <div className="space-y-2">
-          <label className="text-xs uppercase tracking-widest text-zinc-400">
+        <div className="flex w-full min-w-0 flex-col gap-2">
+          <label
+            htmlFor="login-password"
+            className="block w-full text-xs uppercase tracking-widest text-zinc-400"
+          >
             Mot de passe
           </label>
           <Input
+            id="login-password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
-            className="text-white"
+            className="w-full min-w-0 text-white"
           />
         </div>
 
-        <div className="flex items-center justify-between">
+        <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Checkbox>
             <span className="text-sm text-zinc-400">
               Garder la session active
             </span>
           </Checkbox>
 
-          <Link href="#" className="text-sm text-pink-500">
+          <Link href="#" className="text-sm text-pink-500 sm:text-right">
             Accès perdu ?
           </Link>
         </div>
 
         <Button
           onPress={handleLogin}
-          className="w-full rounded-full bg-pink-500 py-6 text-black font-semibold"
+          className="w-full min-w-0 rounded-full bg-pink-500 py-6 font-semibold text-black"
         >
           {loading ? "Connexion..." : "Initialiser la session"}
         </Button>

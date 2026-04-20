@@ -21,12 +21,10 @@ export default async function DashboardLayout({
 
   // Layout protégé avec Sidebar
   return (
-    <div className="flex min-h-screen bg-zinc-950">
-      {/* Sidebar fixe à gauche */}
+    <div className="flex min-h-screen bg-[#0d0d14]">
       <Sidebar />
 
-      {/* Contenu principal avec décalage */}
-      <main className="flex-1 ml-64 min-h-screen p-8">
+      <main className="ml-64 min-h-screen flex-1 border-l border-[#f04090]/10 bg-[#0d0d14] p-6 md:p-8">
         {children}
       </main>
     </div>
