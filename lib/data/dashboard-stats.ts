@@ -41,7 +41,6 @@ export async function getDashboardStats(): Promise<DashboardStats | null> {
     return null;
   }
 
-  const userId = session.user.id;
   const name = session.user.name?.trim();
   const email = session.user.email ?? "";
   const userDisplayName =
@@ -66,24 +65,22 @@ export async function getDashboardStats(): Promise<DashboardStats | null> {
     latestPost,
   ] = await Promise.all([
     prisma.editorialPost.count({
-      where: { userId, status: "PLANIFIE" },
+      where: { status: "PLANIFIE" },
     }),
     prisma.editorialPost.count({
-      where: { userId, status: "PUBLIE" },
+      where: { status: "PUBLIE" },
     }),
     prisma.editorialPost.count({
       where: {
-        userId,
         status: "PLANIFIE",
         scheduledAt: { gte: startOfToday },
       },
     }),
     prisma.user.count(),
     prisma.editorialPost.count({
-      where: { userId, status: "BROUILLON" },
+      where: { status: "BROUILLON" },
     }),
     prisma.editorialPost.findFirst({
-      where: { userId },
       orderBy: { updatedAt: "desc" },
       select: { title: true },
     }),
@@ -96,7 +93,6 @@ export async function getDashboardStats(): Promise<DashboardStats | null> {
 
   const postsInWindow: PostScheduledSlice[] = await prisma.editorialPost.findMany({
     where: {
-      userId,
       scheduledAt: {
         gte: oldestDay,
         lt: endExclusive,
