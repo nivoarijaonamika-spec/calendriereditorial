@@ -81,8 +81,8 @@ export type UpdateCalendarPostInput = {
 export async function updateCalendarPost(
   input: UpdateCalendarPostInput,
 ): Promise<{ ok: true; post: SerializedPost } | { ok: false; error: string }> {
-  const userId = await requireUserId();
-  if (!userId) {
+  const sessionUserId = await requireUserId();
+  if (!sessionUserId) {
     return { ok: false, error: "Non authentifié" };
   }
 
@@ -96,9 +96,7 @@ export async function updateCalendarPost(
     return { ok: false, error: "Date invalide" };
   }
 
-  const existing = await prisma.editorialPost.findFirst({
-    where: { id: input.id, userId },
-  });
+  const existing = await prisma.editorialPost.findUnique({ where: { id: input.id } });
   if (!existing) {
     return { ok: false, error: "Post introuvable" };
   }
@@ -123,14 +121,12 @@ export async function updateCalendarPost(
 export async function deleteCalendarPost(
   id: string,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  const userId = await requireUserId();
-  if (!userId) {
+  const sessionUserId = await requireUserId();
+  if (!sessionUserId) {
     return { ok: false, error: "Non authentifié" };
   }
 
-  const existing = await prisma.editorialPost.findFirst({
-    where: { id, userId },
-  });
+  const existing = await prisma.editorialPost.findUnique({ where: { id } });
   if (!existing) {
     return { ok: false, error: "Post introuvable" };
   }

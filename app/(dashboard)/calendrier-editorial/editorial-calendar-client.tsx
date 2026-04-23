@@ -75,6 +75,10 @@ function buildWeekGrid(y: number, m: number, weekOffset: number) {
   });
 }
 
+function isSameMonth(d: Date, y: number, m: number): boolean {
+  return d.getFullYear() === y && d.getMonth() === m;
+}
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 const STATUS_COLOR: Record<PostStatus, string> = {
   "Publié": "#00e5a0", "Brouillon": "#8888aa", "Planifié": "#f472b6",
@@ -100,34 +104,19 @@ const labelStyle: React.CSSProperties = {
 
 // ─── PostPill ─────────────────────────────────────────────────────────────────
 function PostPill({ post, onClick }: { post: Post; onClick: () => void }) {
-  if (post.type === "podcast") {
-    return (
-      <button
-        onClick={e => { e.stopPropagation(); onClick(); }}
-        style={{
-          background: "#2a2a3a", borderRadius: 20, padding: "4px 10px",
-          fontSize: 11, color: "#e0e0f0", fontWeight: 600,
-          border: "none", cursor: "pointer", textAlign: "left",
-          whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%",
-        }}
-      >
-        🎙 {post.title}
-      </button>
-    );
-  }
   return (
     <button
       onClick={e => { e.stopPropagation(); onClick(); }}
       style={{
         background: "#1e1e2e", border: "1px solid #2a2a3e", borderRadius: 12,
-        padding: "8px 10px", fontSize: 11, color: "#d0d0e8",
+        padding: 8, fontSize: 11, color: "#d0d0e8",
         cursor: "pointer", textAlign: "left", width: "100%",
         transition: "border-color 0.15s",
       }}
       onMouseEnter={e => (e.currentTarget.style.borderColor = "#f04090")}
       onMouseLeave={e => (e.currentTarget.style.borderColor = "#2a2a3e")}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 3 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 6 }}>
         {post.status === "Brouillon" ? (
           <span style={{
             background: "#2e2e40", border: "1px solid #404060", borderRadius: 5,
@@ -139,7 +128,66 @@ function PostPill({ post, onClick }: { post: Post; onClick: () => void }) {
           </span>
         )}
       </div>
-      <div style={{ fontWeight: 700, fontSize: 12, color: "#f0f0ff", lineHeight: 1.3 }}>{post.title}</div>
+
+      {post.file?.kind === "image" && post.file.url ? (
+        <div
+          style={{
+            width: "100%",
+            height: 58,
+            borderRadius: 8,
+            overflow: "hidden",
+            border: "1px solid #2a2a3e",
+            background: "#0b0b12",
+            marginBottom: 6,
+          }}
+        >
+          <img
+            src={post.file.url}
+            alt={post.file.name}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              display: "block",
+            }}
+          />
+        </div>
+      ) : post.file?.kind === "pdf" ? (
+        <div
+          style={{
+            width: "100%",
+            height: 58,
+            borderRadius: 8,
+            border: "1px solid #3d2940",
+            background: "linear-gradient(135deg, #2a1a2a 0%, #1a1a2a 100%)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "0 10px",
+            marginBottom: 6,
+          }}
+        >
+          <span style={{ fontSize: 17 }}>📄</span>
+          <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", color: "#f0a0c8" }}>
+            PDF
+          </span>
+        </div>
+      ) : null}
+
+      <div
+        style={{
+          fontWeight: 700,
+          fontSize: 12,
+          color: "#f0f0ff",
+          lineHeight: 1.3,
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
+        }}
+      >
+        {post.title}
+      </div>
       {post.platforms && (
         <div style={{ color: "#7070a0", fontSize: 10, marginTop: 2 }}>{post.platforms.join(" · ")}</div>
       )}
@@ -161,12 +209,23 @@ function AddDrawer({
   const [type, setType]     = useState<PostType>("article");
   const [plat, setPlat]     = useState("");
   const [file, setFile]     = useState<File | null>(null);
+  const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const fRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    if (!file || file.type === "application/pdf") {
+      setFilePreviewUrl(null);
+      return;
+    }
+    const objectUrl = URL.createObjectURL(file);
+    setFilePreviewUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [file]);
+
   const reset = () => {
     setTitle(""); setDesc(""); setStatus("Brouillon");
-    setType("article"); setPlat(""); setFile(null);
+    setType("article"); setPlat(""); setFile(null); setFilePreviewUrl(null);
   };
 
   const handleAdd = async () => {
@@ -227,14 +286,14 @@ function AddDrawer({
       {/* No trigger child — we open programmatically via state.open() */}
       <Drawer.Backdrop>
         <Drawer.Content placement="right">
-          <Drawer.Dialog className="h-full max-h-[100dvh] w-full max-w-[min(100vw,28rem)] bg-[#10101a] sm:max-h-[min(100dvh,90vh)]">
+          <Drawer.Dialog className="h-[100dvh] max-h-[100dvh] w-full max-w-[min(100vw,28rem)] bg-[#10101a]">
             <Drawer.CloseTrigger
               className="absolute top-4 right-4 text-[#6060a0] hover:text-[#f0f0ff] transition-colors"
               onClick={reset}
             />
             <Drawer.Header className="border-b border-[#1e1e30] pb-4">
               <Drawer.Heading className="text-[#f0f0ff] font-black text-lg">
-                ✦ Nouveau Post
+                Nouveau Post
               </Drawer.Heading>
               {initialDate && (
                 <p className="text-[#6060a0] text-xs mt-1">
@@ -261,7 +320,65 @@ function AddDrawer({
                     onMouseLeave={e => (e.currentTarget.style.borderColor = "#2a2a40")}
                   >
                     {file ? (
-                      <span style={{ color: "#00e5a0", fontWeight: 700 }}>✓ {file.name}</span>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 8,
+                          alignItems: "center",
+                        }}
+                      >
+                        {file.type === "application/pdf" ? (
+                          <div
+                            style={{
+                              width: "100%",
+                              maxWidth: 220,
+                              borderRadius: 10,
+                              border: "1px solid #3d2940",
+                              background: "linear-gradient(135deg, #2a1a2a 0%, #1a1a2a 100%)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: 8,
+                              padding: "12px 10px",
+                              color: "#f0a0c8",
+                              fontWeight: 800,
+                              fontSize: 11,
+                              letterSpacing: "0.08em",
+                            }}
+                          >
+                            <span style={{ fontSize: 18 }}>📄</span>
+                            <span>PDF</span>
+                          </div>
+                        ) : filePreviewUrl ? (
+                          <img
+                            src={filePreviewUrl}
+                            alt={file.name}
+                            style={{
+                              width: "100%",
+                              maxWidth: 220,
+                              maxHeight: 120,
+                              borderRadius: 10,
+                              objectFit: "cover",
+                              border: "1px solid #2a2a40",
+                              display: "block",
+                            }}
+                          />
+                        ) : null}
+                        <span
+                          style={{
+                            color: "#00e5a0",
+                            fontWeight: 700,
+                            fontSize: 12,
+                            maxWidth: 260,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          ✓ {file.name}
+                        </span>
+                      </div>
                     ) : (
                       <>
                         <div style={{ fontSize: 24, marginBottom: 6 }}>📎</div>
@@ -291,7 +408,7 @@ function AddDrawer({
                 </div>
 
                 {/* Type & Statut */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
                     <label style={labelStyle}>TYPE</label>
                     <select value={type} onChange={e => setType(e.target.value as PostType)} style={inputStyle}>
@@ -346,7 +463,7 @@ function AddDrawer({
                     transition: "all 0.2s",
                   }}
                 >
-                  {saving ? "…" : "✦ Enregistrer"}
+                  {saving ? "…" : "Enregistrer"}
                 </button>
               </div>
             </Drawer.Footer>
@@ -437,7 +554,7 @@ function DetailDrawer({
     display: "flex", justifyContent: "space-between", alignItems: "center",
   };
   const keyStyle: React.CSSProperties = {
-    fontSize: 11, color: "#5050a0", fontWeight: 700, letterSpacing: "0.06em",
+    fontSize: 11, color: "#5f8f78", fontWeight: 700, letterSpacing: "0.06em",
   };
 
   const handleSave = async () => {
@@ -490,7 +607,7 @@ function DetailDrawer({
     <Drawer state={state}>
       <Drawer.Backdrop>
         <Drawer.Content placement="right">
-          <Drawer.Dialog className="h-full max-h-[100dvh] w-full max-w-[min(100vw,28rem)] bg-[#10101a] sm:max-h-[min(100dvh,90vh)]">
+          <Drawer.Dialog className="h-[100dvh] max-h-[100dvh] w-full max-w-[min(100vw,28rem)] bg-[#10101a]">
             <Drawer.CloseTrigger className="absolute top-4 right-4 text-[#6060a0] hover:text-[#f0f0ff] transition-colors" />
 
             <Drawer.Header className="border-b border-[#1e1e30] pb-4">
@@ -538,7 +655,7 @@ function DetailDrawer({
                 <div style={{ display: "flex", flexDirection: "column", gap: 14, padding: "8px 0" }}>
                   {editing ? (
                     <>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div>
                           <label style={labelStyle}>TYPE</label>
                           <select
@@ -671,7 +788,7 @@ function DetailDrawer({
                                 padding: "24px 16px",
                                 textAlign: "center",
                                 fontSize: 13,
-                                color: "#6060a0",
+                                color: "#5f8f78",
                                 lineHeight: 1.5,
                               }}
                             >
@@ -1013,6 +1130,7 @@ export function EditorialCalendarClient({ initialPosts }: { initialPosts: Serial
 
   const monthCells = buildMonthGrid(year, month);
   const weekCells  = buildWeekGrid(year, month, weekOff);
+  const monthDays = monthCells.filter(({ date }) => isSameMonth(date, year, month));
 
   const btnBase: React.CSSProperties = { border: "none", cursor: "pointer", transition: "all 0.15s" };
 
@@ -1077,8 +1195,8 @@ export function EditorialCalendarClient({ initialPosts }: { initialPosts: Serial
           {/* Add */}
           <button
             onClick={() => openAdd(today)}
-            className="shrink-0 rounded-full px-4 py-2 text-xs font-bold text-white shadow-[0_0_20px_#f0409044] sm:px-[18px] sm:text-[13px]"
-            style={{ ...btnBase, background: "#f04090" }}
+            className="shrink-0 rounded-full bg-gradient-to-r from-[#f04090] to-[#f472b6] px-4 py-2 text-xs font-bold text-white shadow-[0_0_20px_#f0409044] sm:px-[18px] sm:text-[13px]"
+            style={btnBase}
           >
             + Ajouter
           </button>
@@ -1087,16 +1205,58 @@ export function EditorialCalendarClient({ initialPosts }: { initialPosts: Serial
 
       {/* ── VUE ANNÉE ── */}
       {view === "Année" && (
-        <YearView year={year} posts={posts} onMonthClick={m => {
-          setMonth(m); setView("Mois"); setWeekOff(0);
-        }} />
+        <div className="rounded-[1.4rem] border border-[#f0409035] bg-[linear-gradient(180deg,rgba(240,64,144,0.09),rgba(16,16,26,0.95))] p-3 shadow-[0_0_34px_rgba(240,64,144,0.12)] sm:p-4">
+          <YearView year={year} posts={posts} onMonthClick={m => {
+            setMonth(m); setView("Mois"); setWeekOff(0);
+          }} />
+        </div>
       )}
 
       {/* ── VUE MOIS ── */}
       {view === "Mois" && (
-        <div className="overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
-          <div className="min-w-[540px] sm:min-w-0">
-            <div style={{ background: "#10101a", borderRadius: 16, overflow: "hidden", border: "1px solid #1e1e30" }}>
+        <div className="rounded-[1.4rem] border border-[#f0409035] bg-[linear-gradient(180deg,rgba(240,64,144,0.09),rgba(16,16,26,0.95))] p-3 shadow-[0_0_34px_rgba(240,64,144,0.12)] sm:p-4">
+          {/* Mobile: vraie vue liste pour éviter la grille 7 colonnes écrasée */}
+          <div className="space-y-3 md:hidden">
+            {monthDays.map(({ date }) => {
+              const dayPosts = posts.filter((p) => sameDay(p.date, date));
+              const isTod = sameDay(date, today);
+              return (
+                <article
+                  key={date.toISOString()}
+                  className="rounded-xl border border-[#2b2030] bg-[#10101a] p-3"
+                >
+                  <button
+                    type="button"
+                    onClick={() => openAdd(date)}
+                    className="mb-2 flex w-full items-center justify-between"
+                  >
+                    <span
+                      className="text-sm font-bold"
+                      style={{ color: isTod ? "#f04090" : "#d0d0f0" }}
+                    >
+                      {JOURS_L[dowMon(date)]} {date.getDate()}
+                    </span>
+                    <span className="text-xs text-[#6060a0]">+ Ajouter</span>
+                  </button>
+                  {dayPosts.length === 0 ? (
+                    <p className="text-xs text-[#6060a0]">Aucun post</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {dayPosts.map((p) => (
+                        <PostPill key={p.id} post={p} onClick={() => openDetail(p)} />
+                      ))}
+                    </div>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+
+          {/* Desktop/tablette */}
+          <div className="hidden md:block">
+          <div className="overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
+            <div className="min-w-[540px] sm:min-w-0">
+              <div style={{ background: "#10101a", borderRadius: 16, overflow: "hidden", border: "1px solid #2b2030", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)" }}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", borderBottom: "1px solid #1e1e30" }}>
                 {JOURS_C.map((d) => (
                   <div
@@ -1113,7 +1273,7 @@ export function EditorialCalendarClient({ initialPosts }: { initialPosts: Serial
                   style={{
                     display: "grid",
                     gridTemplateColumns: "repeat(7, 1fr)",
-                    borderBottom: row < 5 ? "1px solid #1a1a28" : "none",
+                    borderBottom: row < 5 ? "1px solid #201a2b" : "none",
                   }}
                 >
                   {monthCells.slice(row * 7, row * 7 + 7).map(({ date, current }, col) => {
@@ -1125,7 +1285,7 @@ export function EditorialCalendarClient({ initialPosts }: { initialPosts: Serial
                         className="min-h-[72px] px-1 py-1.5 sm:min-h-[100px] sm:px-2 sm:pb-2.5 sm:pt-2"
                         onClick={() => openAdd(date)}
                         style={{
-                          borderRight: col < 6 ? "1px solid #1a1a28" : "none",
+                          borderRight: col < 6 ? "1px solid #201a2b" : "none",
                           background: isTod ? "#141420" : "transparent",
                           cursor: "pointer",
                           transition: "background 0.1s",
@@ -1157,15 +1317,57 @@ export function EditorialCalendarClient({ initialPosts }: { initialPosts: Serial
                 </div>
               ))}
             </div>
+            </div>
+          </div>
           </div>
         </div>
       )}
 
       {/* ── VUE SEMAINE ── */}
       {view === "Semaine" && (
-        <div className="overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
-          <div className="min-w-[540px] sm:min-w-0">
-            <div style={{ background: "#10101a", borderRadius: 16, overflow: "hidden", border: "1px solid #1e1e30" }}>
+        <div className="rounded-[1.4rem] border border-[#f0409035] bg-[linear-gradient(180deg,rgba(240,64,144,0.09),rgba(16,16,26,0.95))] p-3 shadow-[0_0_34px_rgba(240,64,144,0.12)] sm:p-4">
+          {/* Mobile: liste des 7 jours */}
+          <div className="space-y-3 md:hidden">
+            {weekCells.map(({ date }) => {
+              const dayPosts = posts.filter((p) => sameDay(p.date, date));
+              const isTod = sameDay(date, today);
+              return (
+                <article
+                  key={date.toISOString()}
+                  className="rounded-xl border border-[#2b2030] bg-[#10101a] p-3"
+                >
+                  <button
+                    type="button"
+                    onClick={() => openAdd(date)}
+                    className="mb-2 flex w-full items-center justify-between"
+                  >
+                    <span
+                      className="text-sm font-bold"
+                      style={{ color: isTod ? "#f04090" : "#d0d0f0" }}
+                    >
+                      {JOURS_L[dowMon(date)]} {date.getDate()}
+                    </span>
+                    <span className="text-xs text-[#6060a0]">+ Ajouter</span>
+                  </button>
+                  {dayPosts.length === 0 ? (
+                    <p className="text-xs text-[#6060a0]">Aucun post</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {dayPosts.map((p) => (
+                        <PostPill key={p.id} post={p} onClick={() => openDetail(p)} />
+                      ))}
+                    </div>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+
+          {/* Desktop/tablette */}
+          <div className="hidden md:block">
+          <div className="overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
+            <div className="min-w-[540px] sm:min-w-0">
+              <div style={{ background: "#10101a", borderRadius: 16, overflow: "hidden", border: "1px solid #2b2030", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)" }}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", borderBottom: "1px solid #1e1e30" }}>
                 {weekCells.map(({ date }, i) => {
                   const isTod = sameDay(date, today);
@@ -1209,7 +1411,7 @@ export function EditorialCalendarClient({ initialPosts }: { initialPosts: Serial
                       key={i}
                       className="min-h-[160px] px-1 py-2 sm:min-h-[200px] sm:px-2 sm:py-3"
                       onClick={() => openAdd(date)}
-                      style={{ borderRight: i < 6 ? "1px solid #1a1a28" : "none", cursor: "pointer" }}
+                      style={{ borderRight: i < 6 ? "1px solid #201a2b" : "none", cursor: "pointer" }}
                       onMouseEnter={(e) => (e.currentTarget.style.background = "#0f0f1a")}
                       onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                     >
@@ -1226,6 +1428,8 @@ export function EditorialCalendarClient({ initialPosts }: { initialPosts: Serial
                 })}
               </div>
             </div>
+            </div>
+          </div>
           </div>
         </div>
       )}

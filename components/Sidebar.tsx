@@ -9,6 +9,13 @@ import { authClient } from "@/lib/auth-client";
 export default function Sidebar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { data: sessionPayload } = authClient.useSession();
+  const connectedUser = sessionPayload?.user;
+  const userDisplayName =
+    connectedUser?.name?.trim() ||
+    connectedUser?.email?.split("@")[0] ||
+    "Utilisateur";
+  const userEmail = connectedUser?.email ?? "Aucun email";
 
   useEffect(() => {
     setMobileOpen(false);
@@ -169,8 +176,12 @@ export default function Sidebar() {
             </Avatar>
 
             <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-semibold text-[#f0f0ff]">Curator One</div>
-              <div className="text-xs font-medium text-[#f472b6]">Premium Plan</div>
+              <div className="truncate text-sm font-semibold text-[#f0f0ff]">
+                {userDisplayName}
+              </div>
+              <div className="truncate text-xs font-medium text-[#f472b6]">
+                {userEmail}
+              </div>
             </div>
 
             <button
