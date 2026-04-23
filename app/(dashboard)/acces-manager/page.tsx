@@ -68,7 +68,7 @@ export default async function ManagerAccessPage() {
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-3">
                       <Avatar className="bg-[#1a1a2a] text-[#f472b6]">
-                        {initials(user.name)}
+                        {initials(user.name?.trim() || "Utilisateur")}
                       </Avatar>
 
                       <div>
@@ -113,7 +113,7 @@ export default async function ManagerAccessPage() {
             >
               <div className="flex items-center gap-3">
                 <Avatar className="bg-[#1a1a2a] text-[#f472b6]">
-                  {initials(user.name)}
+                  {initials(user.name?.trim() || "Utilisateur")}
                 </Avatar>
                 <div className="min-w-0">
                   <p className="truncate font-medium text-[#f0f0ff]">
