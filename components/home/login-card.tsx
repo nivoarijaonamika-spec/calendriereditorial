@@ -20,12 +20,15 @@ export function LoginCard() {
   const [loading, setLoading] = useState(false);
 
   async function handleLogin() {
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPassword = password.trim();
+
     setLoading(true);
     const loadingToast = toast.loading("Connexion en cours...");
 
     const result = await authClient.signIn.email({
-      email,
-      password,
+      email: normalizedEmail,
+      password: normalizedPassword,
       callbackURL: "/dashboard",
     });
     toast.dismiss(loadingToast);

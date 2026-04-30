@@ -141,7 +141,7 @@ export default function Sidebar() {
         </Card.Header>
 
         <Card.Content className="flex-1 overflow-y-auto px-3 py-6">
-          <nav className="flex flex-col items-end gap-1">
+          <nav className="flex flex-col items-start gap-1">
             {navItems.map((item) => {
               const isActive = pathname === item.href;
 
@@ -149,15 +149,15 @@ export default function Sidebar() {
                 <Link key={item.href} href={item.href} className="block w-full" onClick={() => setMobileOpen(false)}>
                   <Button
                     variant={isActive ? "primary" : "ghost"}
-                    className={`h-12 w-full justify-end gap-3 rounded-3xl px-5 text-sm font-medium transition-all duration-200
+                    className={`h-12 w-full justify-start gap-3 rounded-3xl px-5 text-sm font-medium transition-all duration-200
                                         ${
                                           isActive
                                             ? "bg-[#f04090] text-white shadow-[0_0_20px_rgba(240,64,144,0.35)] hover:bg-[#e03684]"
                                             : "text-[#9090b8] hover:bg-white/5 hover:text-[#f0f0ff]"
                                         }`}
                   >
-                    <span className="truncate">{item.name}</span>
                     <span className={`flex-shrink-0 ${isActive ? "text-white" : ""}`}>{item.icon}</span>
+                    <span className="truncate">{item.name}</span>
                   </Button>
                 </Link>
               );

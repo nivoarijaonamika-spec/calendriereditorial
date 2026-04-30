@@ -35,7 +35,19 @@ export default function DashboardClient({ stats }: { stats: DashboardStats }) {
         <Card className="border border-white/5 bg-[#10101a] shadow-none">
           <Card.Content className="p-6">
             <div className="mb-8 flex items-start justify-between">
-              <div className="text-3xl">📅</div>
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#f04090]/30 bg-[#f04090]/10 text-[#f472b6]">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  className="h-4 w-4"
+                  aria-hidden="true"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 2.75v2.5M16 2.75v2.5M3.75 9h16.5M5.25 5.25h13.5A1.5 1.5 0 0 1 20.25 6.75v11.5a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5V6.75a1.5 1.5 0 0 1 1.5-1.5Z" />
+                </svg>
+              </span>
               <Chip color="success" variant="soft" size="sm">
                 Planifiés
               </Chip>
@@ -50,7 +62,19 @@ export default function DashboardClient({ stats }: { stats: DashboardStats }) {
         <Card className="border border-white/5 bg-[#10101a] shadow-none">
           <Card.Content className="p-6">
             <div className="mb-8 flex items-start justify-between">
-              <div className="text-3xl">✅</div>
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-emerald-400/30 bg-emerald-400/10 text-emerald-300">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="h-4 w-4"
+                  aria-hidden="true"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m5 12 4.2 4.2L19 6.5" />
+                </svg>
+              </span>
               <Chip color="success" variant="soft" size="sm">
                 Publiés
               </Chip>
@@ -65,7 +89,19 @@ export default function DashboardClient({ stats }: { stats: DashboardStats }) {
         <Card className="border border-white/5 bg-[#10101a] shadow-none">
           <Card.Content className="p-6">
             <div className="mb-8 flex items-start justify-between">
-              <div className="text-3xl">🚀</div>
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-sky-400/30 bg-sky-400/10 text-sky-300">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.9"
+                  className="h-4 w-4"
+                  aria-hidden="true"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m0-15 5.25 5.25M12 4.5 6.75 9.75" />
+                </svg>
+              </span>
               <Chip variant="soft" size="sm">
                 À venir
               </Chip>
@@ -82,7 +118,19 @@ export default function DashboardClient({ stats }: { stats: DashboardStats }) {
         <Card className="border border-white/5 bg-[#10101a] shadow-none">
           <Card.Content className="p-6">
             <div className="mb-8 flex items-start justify-between">
-              <div className="text-3xl">👥</div>
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-violet-400/30 bg-violet-400/10 text-violet-300">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  className="h-4 w-4"
+                  aria-hidden="true"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm-7 8a7 7 0 0 1 14 0" />
+                </svg>
+              </span>
               <Chip color="default" variant="soft" size="sm">
                 App
               </Chip>
