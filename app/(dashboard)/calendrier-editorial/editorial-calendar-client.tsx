@@ -36,29 +36,38 @@ function toInputDate(d: Date) {
   return `${y}-${m}-${day}`;
 }
 
-/**
- * Fichier brut max côté UI.
- * Le payload Server Action contient une Data URL base64 (+~33%), et certains reverse proxies
- * appliquent une limite plus basse que Next.js -> 413 Request Entity Too Large.
- */
-const MAX_ATTACHMENT_BYTES = 6 * 1024 * 1024;
-const ESTIMATED_SERVER_ACTION_LIMIT_BYTES = 8 * 1024 * 1024;
+/** Limite en envoi direct multipart vers API route VPS. */
+const MAX_ATTACHMENT_BYTES = 20 * 1024 * 1024;
 
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const fr = new FileReader();
-    fr.onload = () => {
-      if (typeof fr.result === "string") resolve(fr.result);
-      else reject(new Error("Lecture fichier"));
-    };
-    fr.onerror = () => reject(new Error("Lecture fichier"));
-    fr.readAsDataURL(file);
+async function uploadAttachment(file: File): Promise<{
+  ok: true;
+  fileUrl: string;
+  fileName: string;
+  fileKind: "pdf" | "image";
+} | {
+  ok: false;
+  error: string;
+}> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch("/api/uploads", {
+    method: "POST",
+    body: formData,
   });
-}
 
-function estimateDataUrlBytes(file: File): number {
-  // Approximation robuste: base64 ~= 4/3 + en-tête data URL.
-  return Math.ceil((file.size * 4) / 3) + 1024;
+  const payload = (await response.json()) as
+    | { ok: true; fileUrl: string; fileName: string; fileKind: "pdf" | "image" }
+    | { ok: false; error?: string };
+
+  if (!response.ok || !payload.ok) {
+    return {
+      ok: false,
+      error: "error" in payload && payload.error ? payload.error : "Upload impossible",
+    };
+  }
+
+  return payload;
 }
 function buildMonthGrid(y: number, m: number) {
   const first = new Date(y, m, 1);
@@ -253,23 +262,14 @@ function AddDrawer({
           setSaving(false);
           return;
         }
-        const estimatedPayloadBytes = estimateDataUrlBytes(file);
-        if (estimatedPayloadBytes > ESTIMATED_SERVER_ACTION_LIMIT_BYTES) {
-          toast.error(
-            "Ce fichier est trop lourd pour l’envoi (erreur 413). Réduisez sa taille puis réessayez.",
-          );
-          setSaving(false);
+        const uploadResult = await uploadAttachment(file);
+        if (!uploadResult.ok) {
+          toast.error(uploadResult.error);
           return;
         }
-        fileName = file.name;
-        fileKind = file.type === "application/pdf" ? "pdf" : "image";
-        try {
-          fileUrl = await readFileAsDataUrl(file);
-        } catch {
-          toast.error("Impossible de lire le fichier.");
-          setSaving(false);
-          return;
-        }
+        fileName = uploadResult.fileName;
+        fileKind = uploadResult.fileKind;
+        fileUrl = uploadResult.fileUrl;
       }
 
       const res = await createCalendarPost({
@@ -294,7 +294,7 @@ function AddDrawer({
       toast.success("Post enregistré");
     } catch {
       toast.error(
-        "Envoi échoué (taille de requête trop grande). Compressez le fichier puis réessayez.",
+        "Envoi échoué. Vérifiez le réseau ou la configuration upload du serveur.",
       );
     } finally {
       setSaving(false);
