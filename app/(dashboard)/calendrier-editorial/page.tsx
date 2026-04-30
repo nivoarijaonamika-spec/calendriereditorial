@@ -3,5 +3,16 @@ import { EditorialCalendarClient } from "./editorial-calendar-client";
 
 export default async function CalendrierEditorialPage() {
   const initialPosts = await getCalendarPosts();
-  return <EditorialCalendarClient initialPosts={initialPosts} />;
+  const now = new Date();
+
+  return (
+    <EditorialCalendarClient
+      initialPosts={initialPosts}
+      initialTodayParts={{
+        year: now.getFullYear(),
+        month: now.getMonth(),
+        day: now.getDate(),
+      }}
+    />
+  );
 }

@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
@@ -8,7 +8,7 @@ import { auth } from "@/lib/auth";
 export const runtime = "nodejs";
 
 const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
-const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "calendar");
+const UPLOAD_DIR = path.join(process.cwd(), "storage", "uploads", "calendar");
 
 function getFileExtension(file: File): string {
   const lowerName = file.name.toLowerCase();
@@ -24,6 +24,45 @@ function resolveKind(file: File): "pdf" | "image" | null {
   if (file.type === "application/pdf") return "pdf";
   if (file.type.startsWith("image/")) return "image";
   return null;
+}
+
+function resolveMimeType(fileName: string): string {
+  const lowerName = fileName.toLowerCase();
+  if (lowerName.endsWith(".pdf")) return "application/pdf";
+  if (lowerName.endsWith(".png")) return "image/png";
+  if (lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg")) return "image/jpeg";
+  if (lowerName.endsWith(".webp")) return "image/webp";
+  if (lowerName.endsWith(".gif")) return "image/gif";
+  return "application/octet-stream";
+}
+
+function isSafeFileName(fileName: string): boolean {
+  return /^[a-zA-Z0-9._-]+$/.test(fileName);
+}
+
+export async function GET(request: Request) {
+  const requestUrl = new URL(request.url);
+  const fileName = requestUrl.searchParams.get("file");
+
+  if (!fileName || !isSafeFileName(fileName)) {
+    return NextResponse.json({ ok: false, error: "Fichier invalide" }, { status: 400 });
+  }
+
+  const filePath = path.join(UPLOAD_DIR, fileName);
+  try {
+    await access(filePath);
+  } catch {
+    return NextResponse.json({ ok: false, error: "Fichier introuvable" }, { status: 404 });
+  }
+
+  const content = await readFile(filePath);
+  return new NextResponse(content, {
+    status: 200,
+    headers: {
+      "Content-Type": resolveMimeType(fileName),
+      "Cache-Control": "public, max-age=31536000, immutable",
+    },
+  });
 }
 
 export async function POST(request: Request) {
@@ -77,7 +116,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     ok: true,
-    fileUrl: `/uploads/calendar/${savedFileName}`,
+    fileUrl: `/api/uploads?file=${encodeURIComponent(savedFileName)}`,
     fileName: file.name,
     fileKind,
   });

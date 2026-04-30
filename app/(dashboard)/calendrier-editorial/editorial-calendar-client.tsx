@@ -69,6 +69,16 @@ async function uploadAttachment(file: File): Promise<{
 
   return payload;
 }
+
+function resolveStoredFileUrl(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  if (url.startsWith("/uploads/calendar/")) {
+    const fileName = url.split("/").pop();
+    if (!fileName) return undefined;
+    return `/api/uploads?file=${encodeURIComponent(fileName)}`;
+  }
+  return url;
+}
 function buildMonthGrid(y: number, m: number) {
   const first = new Date(y, m, 1);
   const offset = dowMon(first);
@@ -105,10 +115,6 @@ const STATUS_COLOR: Record<PostStatus, string> = {
 const TYPE_ICON: Record<PostType, string> = {
   article: "📝", podcast: "🎙", "vidéo": "🎬", image: "🖼",
 };
-
-const today = new Date();
-const CY = today.getFullYear();
-const CM = today.getMonth();
 
 // ─── Shared styles ────────────────────────────────────────────────────────────
 const inputStyle: React.CSSProperties = {
@@ -148,7 +154,7 @@ function PostPill({ post, onClick }: { post: Post; onClick: () => void }) {
         )}
       </div>
 
-      {post.file?.kind === "image" && post.file.url ? (
+      {post.file?.kind === "image" && resolveStoredFileUrl(post.file.url) ? (
         <div
           style={{
             width: "100%",
@@ -161,7 +167,7 @@ function PostPill({ post, onClick }: { post: Post; onClick: () => void }) {
           }}
         >
           <img
-            src={post.file.url}
+            src={resolveStoredFileUrl(post.file.url)}
             alt={post.file.name}
             style={{
               width: "100%",
@@ -497,14 +503,15 @@ function AddDrawer({
 }
 
 function downloadAsset(url: string | undefined, filename: string) {
-  if (!url?.trim()) {
+  const resolvedUrl = resolveStoredFileUrl(url);
+  if (!resolvedUrl?.trim()) {
     toast.error("Aucun fichier téléchargeable.");
     return;
   }
   const name = filename.trim() || "fichier";
-  if (url.startsWith("blob:")) {
+  if (resolvedUrl.startsWith("blob:")) {
     const a = document.createElement("a");
-    a.href = url;
+    a.href = resolvedUrl;
     a.download = name;
     document.body.appendChild(a);
     a.click();
@@ -513,7 +520,7 @@ function downloadAsset(url: string | undefined, filename: string) {
   }
   void (async () => {
     try {
-      const res = await fetch(url);
+      const res = await fetch(resolvedUrl);
       const blob = await res.blob();
       const objectUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -524,7 +531,7 @@ function downloadAsset(url: string | undefined, filename: string) {
       a.remove();
       URL.revokeObjectURL(objectUrl);
     } catch {
-      window.open(url, "_blank", "noopener,noreferrer");
+      window.open(resolvedUrl, "_blank", "noopener,noreferrer");
     }
   })();
 }
@@ -788,9 +795,9 @@ function DetailDrawer({
                       <div style={{ ...keyStyle, marginBottom: 8 }}>FICHIER ATTACHÉ</div>
                       {post.file.kind === "image" ? (
                         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                          {post.file.url ? (
+                          {resolveStoredFileUrl(post.file.url) ? (
                             <img
-                              src={post.file.url}
+                              src={resolveStoredFileUrl(post.file.url)}
                               alt={post.file.name}
                               style={{
                                 width: "100%",
@@ -818,7 +825,7 @@ function DetailDrawer({
                               ({post.file.name}). Ré-attache une image en modifiant le post si besoin.
                             </div>
                           )}
-                          {post.file.url ? (
+                          {resolveStoredFileUrl(post.file.url) ? (
                             <button
                               type="button"
                               onClick={() =>
@@ -840,7 +847,7 @@ function DetailDrawer({
                             </button>
                           ) : null}
                         </div>
-                      ) : post.file.kind === "pdf" && post.file.url ? (
+                      ) : post.file.kind === "pdf" && resolveStoredFileUrl(post.file.url) ? (
                         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                           <div
                             style={{
@@ -854,7 +861,7 @@ function DetailDrawer({
                           >
                             <iframe
                               title={`Aperçu PDF — ${post.file.name}`}
-                              src={pdfPreviewEmbedSrc(post.file.url)}
+                              src={pdfPreviewEmbedSrc(resolveStoredFileUrl(post.file.url) ?? "")}
                               style={{
                                 width: "100%",
                                 height: "min(50vh, 420px)",
@@ -890,7 +897,7 @@ function DetailDrawer({
                               ⬇ Télécharger le PDF
                             </button>
                             <a
-                              href={post.file.url}
+                              href={resolveStoredFileUrl(post.file.url)}
                               target="_blank"
                               rel="noreferrer"
                               style={{
@@ -904,9 +911,9 @@ function DetailDrawer({
                             </a>
                           </div>
                         </div>
-                      ) : post.file.url ? (
+                      ) : resolveStoredFileUrl(post.file.url) ? (
                         <a
-                          href={post.file.url}
+                          href={resolveStoredFileUrl(post.file.url)}
                           target="_blank"
                           rel="noreferrer"
                           style={{
@@ -1049,8 +1056,8 @@ function DetailDrawer({
 }
 
 // ─── YearView ─────────────────────────────────────────────────────────────────
-function YearView({ year, posts, onMonthClick }: {
-  year: number; posts: Post[]; onMonthClick: (m: number) => void;
+function YearView({ year, posts, onMonthClick, today }: {
+  year: number; posts: Post[]; onMonthClick: (m: number) => void; today: Date;
 }) {
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4 lg:gap-[14px]">
@@ -1092,10 +1099,21 @@ function YearView({ year, posts, onMonthClick }: {
 }
 
 // ─── Main (client) ────────────────────────────────────────────────────────────
-export function EditorialCalendarClient({ initialPosts }: { initialPosts: SerializedPost[] }) {
+export function EditorialCalendarClient({
+  initialPosts,
+  initialTodayParts,
+}: {
+  initialPosts: SerializedPost[];
+  initialTodayParts: { year: number; month: number; day: number };
+}) {
+  const today = new Date(
+    initialTodayParts.year,
+    initialTodayParts.month,
+    initialTodayParts.day,
+  );
   const [view, setView]       = useState<ViewMode>("Mois");
-  const [year, setYear]       = useState(CY);
-  const [month, setMonth]     = useState(CM);
+  const [year, setYear]       = useState(initialTodayParts.year);
+  const [month, setMonth]     = useState(initialTodayParts.month);
   const [weekOff, setWeekOff] = useState(0);
   const [posts, setPosts]     = useState<Post[]>(() => initialPosts.map(serializedToPost));
 
@@ -1228,7 +1246,7 @@ export function EditorialCalendarClient({ initialPosts }: { initialPosts: Serial
       {/* ── VUE ANNÉE ── */}
       {view === "Année" && (
         <div className="rounded-[1.4rem] border border-[#f0409035] bg-[linear-gradient(180deg,rgba(240,64,144,0.09),rgba(16,16,26,0.95))] p-3 shadow-[0_0_34px_rgba(240,64,144,0.12)] sm:p-4">
-          <YearView year={year} posts={posts} onMonthClick={m => {
+          <YearView year={year} posts={posts} today={today} onMonthClick={m => {
             setMonth(m); setView("Mois"); setWeekOff(0);
           }} />
         </div>
