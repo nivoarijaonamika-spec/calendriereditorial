@@ -24,27 +24,49 @@ export default function ParametresPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordFeedback, setPasswordFeedback] = useState<{
+    type: "success" | "error" | null;
+    message: string;
+  }>({
+    type: null,
+    message: "",
+  });
+  const hasCurrentPassword = currentPassword.trim().length > 0;
+  const isMinLengthOk = newPassword.trim().length >= 8;
+  const isDifferentFromCurrent =
+    currentPassword.trim().length > 0 && newPassword !== currentPassword;
+  const doesConfirmationMatch =
+    confirmPassword.trim().length > 0 && newPassword === confirmPassword;
   const canSubmitPassword =
-    currentPassword.trim().length > 0 &&
-    newPassword.trim().length >= 8 &&
-    newPassword === confirmPassword &&
-    newPassword !== currentPassword;
+    hasCurrentPassword &&
+    isMinLengthOk &&
+    doesConfirmationMatch &&
+    isDifferentFromCurrent;
 
   async function handleChangePassword() {
+    setPasswordFeedback({ type: null, message: "" });
     if (!currentPassword.trim() || !newPassword.trim()) {
-      toast.error("Renseigne le mot de passe actuel et le nouveau.");
+      const message = "Renseigne le mot de passe actuel et le nouveau.";
+      setPasswordFeedback({ type: "error", message });
+      toast.error(message);
       return;
     }
     if (newPassword !== confirmPassword) {
-      toast.error("La confirmation ne correspond pas au nouveau mot de passe.");
+      const message = "La confirmation ne correspond pas au nouveau mot de passe.";
+      setPasswordFeedback({ type: "error", message });
+      toast.error(message);
       return;
     }
     if (newPassword.length < 8) {
-      toast.error("Le nouveau mot de passe doit contenir au moins 8 caractères.");
+      const message = "Le nouveau mot de passe doit contenir au moins 8 caractères.";
+      setPasswordFeedback({ type: "error", message });
+      toast.error(message);
       return;
     }
     if (newPassword === currentPassword) {
-      toast.error("Le nouveau mot de passe doit être différent de l’actuel.");
+      const message = "Le nouveau mot de passe doit être différent de l’actuel.";
+      setPasswordFeedback({ type: "error", message });
+      toast.error(message);
       return;
     }
 
@@ -57,12 +79,19 @@ export default function ParametresPage() {
       });
       toast.dismiss(loadingId);
       if (result.error) {
-        toast.error(
+        const message =
           result.error.message?.trim() ||
-            "Mot de passe actuel incorrect ou règles non respectées.",
+          "Mot de passe actuel incorrect ou règles non respectées.";
+        setPasswordFeedback({ type: "error", message });
+        toast.error(
+          message,
         );
         return;
       }
+      setPasswordFeedback({
+        type: "success",
+        message: "Mot de passe mis à jour avec succès.",
+      });
       toast.success("Mot de passe mis à jour.");
       setCurrentPassword("");
       setNewPassword("");
@@ -175,7 +204,12 @@ export default function ParametresPage() {
                   id="current-password"
                   type="password"
                   value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  onChange={(e) => {
+                    setCurrentPassword(e.target.value);
+                    if (passwordFeedback.type) {
+                      setPasswordFeedback({ type: null, message: "" });
+                    }
+                  }}
                   placeholder="••••••••"
                   className="w-full text-[#f0f0ff]"
                   autoComplete="current-password"
@@ -192,11 +226,21 @@ export default function ParametresPage() {
                   id="new-password"
                   type="password"
                   value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
+                  onChange={(e) => {
+                    setNewPassword(e.target.value);
+                    if (passwordFeedback.type) {
+                      setPasswordFeedback({ type: null, message: "" });
+                    }
+                  }}
                   placeholder="Au moins 8 caractères"
                   className="w-full text-[#f0f0ff]"
                   autoComplete="new-password"
                 />
+                {newPassword.length > 0 && !isMinLengthOk ? (
+                  <p className="text-xs text-[#f472b6]">
+                    Au moins 8 caractères requis.
+                  </p>
+                ) : null}
               </div>
               <div className="flex flex-col gap-2">
                 <label
@@ -209,15 +253,50 @@ export default function ParametresPage() {
                   id="confirm-password"
                   type="password"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    if (passwordFeedback.type) {
+                      setPasswordFeedback({ type: null, message: "" });
+                    }
+                  }}
                   placeholder="••••••••"
                   className="w-full text-[#f0f0ff]"
                   autoComplete="new-password"
                 />
+                {confirmPassword.length > 0 && !doesConfirmationMatch ? (
+                  <p className="text-xs text-[#f472b6]">
+                    La confirmation ne correspond pas.
+                  </p>
+                ) : null}
               </div>
               <div className="rounded-xl border border-white/10 bg-[#141422] p-3 text-xs text-[#6060a0]">
-                Le mot de passe doit contenir au moins 8 caractères et être différent de l’actuel.
+                <p className={isMinLengthOk ? "text-emerald-300" : "text-[#6060a0]"}>
+                  {isMinLengthOk ? "✓" : "•"} Minimum 8 caractères
+                </p>
+                <p
+                  className={
+                    isDifferentFromCurrent ? "text-emerald-300" : "text-[#6060a0]"
+                  }
+                >
+                  {isDifferentFromCurrent ? "✓" : "•"} Différent du mot de passe actuel
+                </p>
+                <p
+                  className={doesConfirmationMatch ? "text-emerald-300" : "text-[#6060a0]"}
+                >
+                  {doesConfirmationMatch ? "✓" : "•"} Confirmation identique
+                </p>
               </div>
+              {passwordFeedback.type ? (
+                <p
+                  className={
+                    passwordFeedback.type === "success"
+                      ? "text-xs text-emerald-300"
+                      : "text-xs text-[#f472b6]"
+                  }
+                >
+                  {passwordFeedback.message}
+                </p>
+              ) : null}
               <Button
                 onPress={() => void handleChangePassword()}
                 isDisabled={passwordLoading || !canSubmitPassword}
