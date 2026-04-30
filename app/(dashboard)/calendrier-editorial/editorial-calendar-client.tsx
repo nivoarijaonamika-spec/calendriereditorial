@@ -36,8 +36,13 @@ function toInputDate(d: Date) {
   return `${y}-${m}-${day}`;
 }
 
-/** Fichier brut max ; le corps Server Action est plus gros (data URL base64). */
-const MAX_ATTACHMENT_BYTES = 16 * 1024 * 1024;
+/**
+ * Fichier brut max côté UI.
+ * Le payload Server Action contient une Data URL base64 (+~33%), et certains reverse proxies
+ * appliquent une limite plus basse que Next.js -> 413 Request Entity Too Large.
+ */
+const MAX_ATTACHMENT_BYTES = 6 * 1024 * 1024;
+const ESTIMATED_SERVER_ACTION_LIMIT_BYTES = 8 * 1024 * 1024;
 
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -49,6 +54,11 @@ function readFileAsDataUrl(file: File): Promise<string> {
     fr.onerror = () => reject(new Error("Lecture fichier"));
     fr.readAsDataURL(file);
   });
+}
+
+function estimateDataUrlBytes(file: File): number {
+  // Approximation robuste: base64 ~= 4/3 + en-tête data URL.
+  return Math.ceil((file.size * 4) / 3) + 1024;
 }
 function buildMonthGrid(y: number, m: number) {
   const first = new Date(y, m, 1);
@@ -238,7 +248,15 @@ function AddDrawer({
       if (file) {
         if (file.size > MAX_ATTACHMENT_BYTES) {
           toast.error(
-            `Fichier trop volumineux (max ${Math.round(MAX_ATTACHMENT_BYTES / (1024 * 1024))} Mo pour l’aperçu).`,
+            `Fichier trop volumineux (max ${Math.round(MAX_ATTACHMENT_BYTES / (1024 * 1024))} Mo).`,
+          );
+          setSaving(false);
+          return;
+        }
+        const estimatedPayloadBytes = estimateDataUrlBytes(file);
+        if (estimatedPayloadBytes > ESTIMATED_SERVER_ACTION_LIMIT_BYTES) {
+          toast.error(
+            "Ce fichier est trop lourd pour l’envoi (erreur 413). Réduisez sa taille puis réessayez.",
           );
           setSaving(false);
           return;
@@ -274,6 +292,10 @@ function AddDrawer({
       reset();
       state.close();
       toast.success("Post enregistré");
+    } catch {
+      toast.error(
+        "Envoi échoué (taille de requête trop grande). Compressez le fichier puis réessayez.",
+      );
     } finally {
       setSaving(false);
     }
